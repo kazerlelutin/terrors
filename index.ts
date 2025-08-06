@@ -4,6 +4,12 @@ Bun.serve({
   port: Bun.env.PORT || 3000,
   // `routes` requires Bun v1.2.3+
   routes: {
+    "/": async () => {
+
+      return Response.json({
+        message: "Hello World"
+      });
+    },
     // Endpoint API pour recevoir les erreurs
     "/sadako": {
       POST: sadako,
