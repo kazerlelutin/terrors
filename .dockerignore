@@ -1,0 +1,46 @@
+# 🎭 Terrors - Docker ignore file
+# "Some files should never see the light of day..."
+
+# Git
+.git
+.gitignore
+
+# Documentation
+README.md
+*.md
+
+# Development files
+.env
+.env.example
+.air.toml
+
+# Logs
+*.log
+tmp/
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Node modules (if any)
+node_modules/
+
+# Test files
+*_test.go
+testdata/
+
+# Build artifacts
+tmp/
+build/
+dist/
+
+# Docker files
+Dockerfile*
+docker-compose*
+.dockerignore
