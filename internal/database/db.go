@@ -31,17 +31,9 @@ func Init() (*sql.DB, error) {
 		return db, nil
 	}
 
-	// Fallback vers les variables individuelles
-	host := getEnv("DB_HOST", "localhost")
-	port := getEnv("DB_PORT", "5432")
-	user := getEnv("DB_USER", "postgres")
-	password := getEnv("DB_PASS", "")
-	database := getEnv("DB_NAME", "terrors")
+	url := getEnv("PG_URL", "")
 
-	dsn := fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=disable",
-		host, port, user, password, database)
-
-	db, err := sql.Open("postgres", dsn)
+	db, err := sql.Open("postgres", url)
 	if err != nil {
 		return nil, fmt.Errorf("erreur d'ouverture de la DB: %w", err)
 	}

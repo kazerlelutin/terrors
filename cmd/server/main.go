@@ -13,15 +13,19 @@ import (
 )
 
 func main() {
-	// Initialiser le générateur de nombres aléatoires
-	rand.Seed(time.Now().UnixNano())
+	r := rand.New(rand.NewSource(time.Now().UnixNano()))
+	_ = r
 
-	// Charger les variables d'environnement depuis .env
-	if err := godotenv.Load(); err != nil {
-		log.Println("⚠️  Fichier .env non trouvé, utilisation des variables système")
+	if _, err := os.Stat(".env"); err == nil {
+		if err := godotenv.Load(); err != nil {
+			log.Printf("⚠️  Erreur lors du chargement du fichier .env: %v", err)
+		} else {
+			log.Println("✅ Fichier .env chargé")
+		}
+	} else {
+		log.Println("ℹ️  Aucun fichier .env trouvé, utilisation des variables d'environnement système")
 	}
 
-	// Initialiser la base de données (optionnel)
 	db, err := database.Init()
 	if err != nil {
 		log.Printf("⚠️  Base de données non disponible: %v", err)
@@ -31,15 +35,12 @@ func main() {
 		defer db.Close()
 	}
 
-	// Initialiser les handlers avec la DB (peut être nil)
 	handlers := api.NewHandlers(db)
 
-	// Configurer les routes
 	http.HandleFunc("/", handlers.Home)
 	http.HandleFunc("/sadako", handlers.Sadako)
 	http.HandleFunc("/cdn/terrors.js", handlers.ServeTerrorsJS)
 
-	// Port par défaut
 	port := os.Getenv("PORT")
 	if port == "" {
 		port = "3000"

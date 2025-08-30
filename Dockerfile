@@ -41,6 +41,9 @@ COPY --from=builder /app/main .
 # Copy static files
 COPY --from=builder /app/static ./static
 
+# Create empty .env file to prevent warnings (variables will come from CapRover)
+RUN touch .env
+
 # Change ownership to non-root user
 RUN chown -R terrors:terrors /app
 
