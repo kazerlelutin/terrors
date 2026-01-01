@@ -1,61 +1,50 @@
-# 🎭 Terrors - Error Monitoring Service Dockerfile
-# "The call is coming from inside the container..."
-
-# Build stage
 FROM golang:1.24-alpine AS builder
 
-# Install git and ca-certificates (needed for go mod download)
 RUN apk add --no-cache git ca-certificates
 
-# Set working directory
 WORKDIR /app
 
-# Copy go mod files
 COPY go.mod go.sum ./
 
-# Download dependencies
 RUN go mod download
 
-# Copy source code
 COPY . .
 
-# Update go.mod and build the application
-RUN go mod tidy && CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o main ./cmd/server
+RUN go mod tidy && \
+    CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o main ./cmd/server && \
+    CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o migrate ./cmd/migrate
 
-# Final stage
 FROM alpine:latest
 
-# Install ca-certificates for HTTPS requests
-RUN apk --no-cache add ca-certificates
+RUN apk --no-cache add ca-certificates wget
 
-# Create non-root user
 RUN addgroup -g 1001 -S terrors && \
     adduser -u 1001 -S terrors -G terrors
 
-# Set working directory
 WORKDIR /app
 
-# Copy binary from builder stage
-COPY --from=builder /app/main .
 
-# Copy static files
+COPY --from=builder /app/main .
+COPY --from=builder /app/migrate .
+
 COPY --from=builder /app/static ./static
 
-# Create empty .env file to prevent warnings (variables will come from CapRover)
+
+COPY --from=builder /app/migrations ./migrations
+COPY --from=builder /app/docker-entrypoint.sh ./docker-entrypoint.sh
+
 RUN touch .env
 
-# Change ownership to non-root user
-RUN chown -R terrors:terrors /app
+RUN chown -R terrors:terrors /app && \
+    chmod +x ./docker-entrypoint.sh && \
+    chmod +x ./main && \
+    chmod +x ./migrate
 
-# Switch to non-root user
 USER terrors
 
-# Expose port (CapRover will use this)
-EXPOSE 3000
+EXPOSE 4004
 
-# Health check for CapRover
-HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
-    CMD wget --no-verbose --tries=1 --spider http://localhost:3000/ || exit 1
+HEALTHCHECK --interval=30s --timeout=3s --start-period=10s --retries=3 \
+    CMD wget --no-verbose --tries=1 --spider http://localhost:4004/ || exit 1
 
-# Run the application
-CMD ["./main"]
+CMD ["./docker-entrypoint.sh"]

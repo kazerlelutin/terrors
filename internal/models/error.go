@@ -4,7 +4,6 @@ import (
 	"time"
 )
 
-// Error représente une erreur capturée
 type Error struct {
 	ID          int64     `json:"id" db:"id"`
 	AppID       string    `json:"appId" db:"app_id"`
@@ -13,11 +12,11 @@ type Error struct {
 	Fingerprint string    `json:"fingerprint" db:"fingerprint"`
 	URL         string    `json:"url" db:"url"`
 	Type        string    `json:"type" db:"type"`
+	Status      string    `json:"status" db:"status"` // 'new', 'treated', 'deleted'
 	CreatedAt   time.Time `json:"createdAt" db:"created_at"`
 	UpdatedAt   time.Time `json:"updatedAt" db:"updated_at"`
 }
 
-// ErrorRequest représente la requête reçue du client
 type ErrorRequest struct {
 	AppID       string `json:"appId"`
 	Message     string `json:"message"`
@@ -28,7 +27,6 @@ type ErrorRequest struct {
 	Type        string `json:"type"`
 }
 
-// ErrorResponse représente la réponse de l'API
 type ErrorResponse struct {
 	Success   bool   `json:"success"`
 	Message   string `json:"message"`

@@ -18,18 +18,18 @@ func main() {
 
 	if _, err := os.Stat(".env"); err == nil {
 		if err := godotenv.Load(); err != nil {
-			log.Printf("⚠️  Erreur lors du chargement du fichier .env: %v", err)
+			log.Printf("Error loading .env file: %v", err)
 		} else {
-			log.Println("✅ Fichier .env chargé")
+			log.Println(".env file loaded")
 		}
 	} else {
-		log.Println("ℹ️  Aucun fichier .env trouvé, utilisation des variables d'environnement système")
+		log.Println("No .env file found, using system environment variables")
 	}
 
 	db, err := database.Init()
 	if err != nil {
-		log.Printf("⚠️  Base de données non disponible: %v", err)
-		log.Println("Le serveur démarre en mode démo (sans persistance)")
+		log.Printf("Database not available: %v", err)
+		log.Println("Server starts in demo mode (no persistence)")
 		db = nil
 	} else {
 		defer db.Close()
@@ -38,12 +38,20 @@ func main() {
 	handlers := api.NewHandlers(db)
 
 	http.HandleFunc("/", handlers.Home)
-	http.HandleFunc("/sadako", handlers.Sadako)
+	http.HandleFunc("/sadako", handlers.Sadako) // Frontend errors
+	http.HandleFunc("/jason", handlers.Jason)   // Backend errors
 	http.HandleFunc("/cdn/terrors.js", handlers.ServeTerrorsJS)
+	http.HandleFunc("/overlook", handlers.Overlook) // Dashboard CQRS
+	http.HandleFunc("/api/apps", api.RequireAdminToken(handlers.HandleApps))
+	http.HandleFunc("/api/apps/", api.RequireAdminToken(handlers.HandleApps))
+	http.HandleFunc("/api/errors", api.RequireAdminToken(handlers.HandleErrors))
+	http.HandleFunc("/api/errors/", api.RequireAdminToken(handlers.HandleErrors))
+	http.HandleFunc("/api/webhooks", api.RequireAdminToken(handlers.HandleWebhooks))
+	http.HandleFunc("/api/webhooks/", api.RequireAdminToken(handlers.HandleWebhooks))
 
 	port := os.Getenv("PORT")
 	if port == "" {
-		port = "3000"
+		port = "4004"
 	}
 
 	log.Printf("🚀 Serveur démarré sur http://localhost:%s", port)

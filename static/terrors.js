@@ -25,8 +25,32 @@
     }
   }
 
+  // Cache pour éviter les envois multiples de la même erreur rapidement
+  const sentErrors = new Map();
+  const DEBOUNCE_TIME = 5000; // 5 secondes
+
   async function handleError(message, stack, type = 'error') {
     const fingerprint = await computeFingerprint(message, stack);
+    const cacheKey = `${fingerprint}-${type}`;
+
+    // Vérifier si on a déjà envoyé cette erreur récemment
+    const lastSent = sentErrors.get(cacheKey);
+    const now = Date.now();
+
+    if (lastSent && (now - lastSent) < DEBOUNCE_TIME) {
+      console.log('Error déjà envoyée récemment, ignorée:', message);
+      return;
+    }
+
+    // Marquer comme envoyée
+    sentErrors.set(cacheKey, now);
+
+    // Nettoyer le cache périodiquement (garder seulement les 100 dernières)
+    if (sentErrors.size > 100) {
+      const oldestKey = sentErrors.keys().next().value;
+      sentErrors.delete(oldestKey);
+    }
+
     fetch(origin + '/sadako', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -36,9 +60,13 @@
         stack,
         fingerprint,
         url: window.location.href,
-        ts: Date.now(),
+        ts: now,
         type
       })
+    }).catch(err => {
+      console.error('Erreur envoi à Terrors:', err);
+      // En cas d'erreur, on retire du cache pour pouvoir réessayer
+      sentErrors.delete(cacheKey);
     });
   }
 
