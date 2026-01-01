@@ -3,7 +3,7 @@
     el = document.querySelector('script[src*="terrors.js"]'),
     url = el?.getAttribute('src'),
     origin = url?.split('/').slice(0, -2).join('/'),
-    appId = el?.getAttribute('appid');
+    appId = el?.getAttribute('data-app-id');
 
   if (!appId) {
     console.error('App ID for terrors.js not found');

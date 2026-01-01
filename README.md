@@ -92,7 +92,10 @@ _"What's your favorite scary movie?"_
 _"Don't fall asleep..."_
 
 ```html
-<script src="http://localhost:3000/cdn/terrors.js" appid="your-app-id"></script>
+<script
+  src="http://localhost:3000/cdn/terrors.js"
+  data-app-id="your-app-id"
+></script>
 ```
 
 _"The script will watch your application and capture every error that dares to appear."_
